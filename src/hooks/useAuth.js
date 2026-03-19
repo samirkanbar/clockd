@@ -1,36 +1,42 @@
 import { useState, useEffect } from 'react'
 import netlifyIdentity from 'netlify-identity-widget'
 
+// Initialize once at module level, not inside the component
+netlifyIdentity.init()
+
 export function useAuth() {
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState(() => netlifyIdentity.currentUser())
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    netlifyIdentity.on('init', (u) => {
+    const onInit = (u) => {
       setUser(u)
       setIsLoading(false)
-    })
-
-    netlifyIdentity.on('login', (u) => {
+    }
+    const onLogin = (u) => {
       setUser(u)
       netlifyIdentity.close()
-    })
+    }
+    const onLogout = () => setUser(null)
 
-    netlifyIdentity.on('logout', () => {
-      setUser(null)
-    })
+    netlifyIdentity.on('init', onInit)
+    netlifyIdentity.on('login', onLogin)
+    netlifyIdentity.on('logout', onLogout)
 
-    netlifyIdentity.init()
+    // init event may have already fired before this effect ran
+    setIsLoading(false)
 
     return () => {
-      netlifyIdentity.off('init')
-      netlifyIdentity.off('login')
-      netlifyIdentity.off('logout')
+      netlifyIdentity.off('init', onInit)
+      netlifyIdentity.off('login', onLogin)
+      netlifyIdentity.off('logout', onLogout)
     }
   }, [])
 
-  const login = () => netlifyIdentity.open()
-  const logout = () => netlifyIdentity.logout()
-
-  return { user, isLoading, login, logout }
+  return {
+    user,
+    isLoading,
+    login: () => netlifyIdentity.open(),
+    logout: () => netlifyIdentity.logout(),
+  }
 }
