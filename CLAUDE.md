@@ -5,36 +5,37 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-npm start           # Start Expo development server
-npm run ios         # Run on iOS simulator
-npm run android     # Run on Android emulator
-npm run web         # Run web version
-npm run lint        # Run ESLint
-npm run reset-project  # Move example code to app-example/, create blank app
+npm install     # Install dependencies
+npm run dev     # Start Vite dev server (localhost:5173)
+npm run build   # Production build → dist/
+npm run preview # Preview production build locally
 ```
 
 No test framework is configured.
 
 ## Architecture
 
-This is an **Expo SDK 54 universal app** (iOS, Android, Web) using file-based routing via Expo Router. New Architecture and React Compiler are both enabled.
+**Clockd** is a Vite + React SPA deployed on Netlify. Auth is handled by Netlify Identity; all time data lives in `localStorage` scoped per user.
+
+### Auth (`src/hooks/useAuth.js`)
+
+Wraps `netlify-identity-widget` (npm package). The CDN script in `index.html` is also included per Netlify's requirement. `useAuth` returns `{ user, isLoading, login, logout }`. Netlify Identity only works on a deployed Netlify site — local dev skips auth.
+
+### Data Layer (`src/hooks/useTimeData.js`)
+
+- Storage keys: `clockd_${userId}` (session history) and `clockd_active_${userId}` (in-progress clock-in ISO timestamp)
+- On mount, checks for an active session from a previous day and auto-clocks-out at `23:59:59` of the clock-in date (midnight crossover handling)
+- Returns `{ data, activeSession, clockIn, clockOut }`
+- `data` shape: `{ "YYYY-MM-DD": { totalSeconds, sessions: [{ in, out, seconds }] } }`
 
 ### Routing
 
-Routes are defined by files under `app/`. The `(tabs)/` group renders as a bottom tab navigator. `_layout.tsx` files configure navigation at each level. The root layout wraps everything in a `ThemeProvider` and defines a Stack with the tab group and a modal screen.
+Two routes: `/` (TrackerPage) and `/export` (ExportPage). `public/_redirects` and `netlify.toml` both define the SPA redirect so React Router works on Netlify without 404s.
 
-### Theme System
+### Export (`src/utils/exportSheet.js`)
 
-- `constants/theme.ts` — centralized color tokens for light/dark modes and platform-specific fonts
-- `hooks/use-theme-color.ts` — resolves the correct color given the active color scheme
-- `hooks/use-color-scheme.ts` (+ `.web.ts`) — wraps React Native's color scheme with web hydration support
-- `ThemedText` and `ThemedView` in `components/` are the standard building blocks for themed UI
+Uses SheetJS (`xlsx`) to generate a two-sheet `.xlsx` file: "Timesheet Summary" (one row per day) and "Session Log" (one row per session). Called directly from `ExportForm` on button click.
 
-### Platform Abstractions
+### Styling
 
-- `components/ui/icon-symbol.tsx` — falls back to Material Icons on Android/web; `icon-symbol.ios.tsx` uses SF Symbols via `expo-symbols`
-- `hooks/use-color-scheme.web.ts` — separate web implementation for static rendering hydration
-
-### Path Aliases
-
-`@/*` maps to the repo root (configured in `tsconfig.json`).
+Dark industrial theme — near-black background (`#0D0D0D`) with subtle CSS grid texture defined in `src/index.css`. Amber (`#F59E0B` / Tailwind `amber-400`) as the accent color. JetBrains Mono loaded from Google Fonts via `index.html`.
