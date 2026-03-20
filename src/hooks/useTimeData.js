@@ -87,5 +87,22 @@ export function useTimeData(userId) {
     setActiveSession(null)
   }, [userId, activeSession])
 
-  return { data, activeSession, clockIn, clockOut }
+  const addSession = useCallback((dateStr, inISO, outISO) => {
+    if (!userId) return
+    const seconds = Math.floor((new Date(outISO) - new Date(inISO)) / 1000)
+    if (seconds <= 0) return
+
+    setData((prev) => {
+      const current = { ...prev }
+      const day = { ...(current[dateStr] || { totalSeconds: 0, sessions: [] }) }
+      day.sessions = [...(day.sessions || []), { in: inISO, out: outISO, seconds }]
+      day.sessions.sort((a, b) => new Date(a.in) - new Date(b.in))
+      day.totalSeconds = (day.totalSeconds || 0) + seconds
+      current[dateStr] = day
+      saveData(userId, current)
+      return current
+    })
+  }, [userId])
+
+  return { data, activeSession, clockIn, clockOut, addSession }
 }
