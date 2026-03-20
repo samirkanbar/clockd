@@ -32,7 +32,7 @@ function LoadingScreen() {
 
 export default function App() {
   const { user, isLoading, login, logout } = useAuth()
-  const { data, activeSession, clockIn, clockOut, addSession } = useTimeData(user?.id)
+  const { data, activeSession, clockIn, clockOut, addSession, updateSession, deleteSession } = useTimeData(user?.id)
 
   if (isLoading) return <LoadingScreen />
   if (!user) return <LoginScreen onLogin={login} />
@@ -51,6 +51,8 @@ export default function App() {
                 clockIn={clockIn}
                 clockOut={clockOut}
                 addSession={addSession}
+                updateSession={updateSession}
+                deleteSession={deleteSession}
               />
             }
           />

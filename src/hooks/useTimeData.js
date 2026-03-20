@@ -104,5 +104,39 @@ export function useTimeData(userId) {
     })
   }, [userId])
 
-  return { data, activeSession, clockIn, clockOut, addSession }
+  const updateSession = useCallback((dateStr, index, inISO, outISO) => {
+    if (!userId) return
+    const seconds = Math.floor((new Date(outISO) - new Date(inISO)) / 1000)
+    if (seconds <= 0) return
+
+    setData((prev) => {
+      const current = { ...prev }
+      const day = { ...(current[dateStr] || { totalSeconds: 0, sessions: [] }) }
+      const sessions = [...(day.sessions || [])]
+      sessions[index] = { in: inISO, out: outISO, seconds }
+      sessions.sort((a, b) => new Date(a.in) - new Date(b.in))
+      day.sessions = sessions
+      day.totalSeconds = sessions.reduce((sum, s) => sum + s.seconds, 0)
+      current[dateStr] = day
+      saveData(userId, current)
+      return current
+    })
+  }, [userId])
+
+  const deleteSession = useCallback((dateStr, index) => {
+    if (!userId) return
+
+    setData((prev) => {
+      const current = { ...prev }
+      const day = { ...(current[dateStr] || { totalSeconds: 0, sessions: [] }) }
+      const sessions = (day.sessions || []).filter((_, i) => i !== index)
+      day.sessions = sessions
+      day.totalSeconds = sessions.reduce((sum, s) => sum + s.seconds, 0)
+      current[dateStr] = day
+      saveData(userId, current)
+      return current
+    })
+  }, [userId])
+
+  return { data, activeSession, clockIn, clockOut, addSession, updateSession, deleteSession }
 }
