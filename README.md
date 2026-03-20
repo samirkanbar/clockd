@@ -1,6 +1,6 @@
 # Clockd
 
-Remote work time tracker. Clock in/out, view weekly history, and export Excel timesheets.
+100% vibe-coded remote work time tracker. Clock in/out, view weekly history, and export Excel timesheets.
 
 ## Deploy to Netlify
 
