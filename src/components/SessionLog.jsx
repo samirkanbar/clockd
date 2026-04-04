@@ -13,7 +13,7 @@ function timeInputToISO(dateStr, timeValue) {
   return d.toISOString()
 }
 
-export default function SessionLog({ sessions, dateStr, onUpdate, onDelete }) {
+export default function SessionLog({ sessions, dateStr, title, onUpdate, onDelete }) {
   const [editingIndex, setEditingIndex] = useState(null)
   const [editIn, setEditIn] = useState('')
   const [editOut, setEditOut] = useState('')
@@ -38,8 +38,13 @@ export default function SessionLog({ sessions, dateStr, onUpdate, onDelete }) {
 
   if (!sessions || sessions.length === 0) {
     return (
-      <div className="border border-zinc-800 rounded-lg p-8 text-center">
-        <p className="font-mono text-sm text-zinc-600">No sessions recorded today</p>
+      <div className="border border-zinc-800 rounded-lg overflow-hidden">
+        <div className="px-4 py-2 border-b border-zinc-800 bg-zinc-900/50">
+          <span className="font-mono text-xs text-zinc-500 tracking-widest uppercase">
+            {title || "Today's Sessions"}
+          </span>
+        </div>
+        <p className="font-mono text-sm text-zinc-600 p-8 text-center">No sessions recorded</p>
       </div>
     )
   }
@@ -48,7 +53,7 @@ export default function SessionLog({ sessions, dateStr, onUpdate, onDelete }) {
     <div className="border border-zinc-800 rounded-lg overflow-hidden">
       <div className="px-4 py-2 border-b border-zinc-800 bg-zinc-900/50">
         <span className="font-mono text-xs text-zinc-500 tracking-widest uppercase">
-          Today's Sessions
+          {title || "Today's Sessions"}
         </span>
       </div>
       <div className="divide-y divide-zinc-800/50">

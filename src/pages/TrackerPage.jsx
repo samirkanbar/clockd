@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import Timer from '../components/Timer'
 import SessionLog from '../components/SessionLog'
 import WeeklySummary from '../components/WeeklySummary'
@@ -7,6 +8,11 @@ import { toDateStr, formatDuration } from '../utils/timeHelpers'
 export default function TrackerPage({ data, activeSession, clockIn, clockOut, addSession, updateSession, deleteSession }) {
   const today = toDateStr(new Date())
   const todayData = data[today] || { totalSeconds: 0, sessions: [] }
+  const [selectedDate, setSelectedDate] = useState(null)
+
+  const selectedData = selectedDate && selectedDate !== today
+    ? (data[selectedDate] || { totalSeconds: 0, sessions: [] })
+    : null
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
@@ -28,8 +34,24 @@ export default function TrackerPage({ data, activeSession, clockIn, clockOut, ad
           />
           <ManualEntry onAdd={addSession} />
         </div>
-        <WeeklySummary data={data} />
+        <WeeklySummary
+          data={data}
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+        />
       </div>
+
+      {selectedData && (
+        <div className="space-y-1">
+          <SessionLog
+            sessions={selectedData.sessions}
+            dateStr={selectedDate}
+            title={`${selectedDate} — ${formatDuration(selectedData.totalSeconds)}`}
+            onUpdate={updateSession}
+            onDelete={deleteSession}
+          />
+        </div>
+      )}
     </div>
   )
 }
